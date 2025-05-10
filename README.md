@@ -5,6 +5,12 @@ based on libcod1 :D
 Supported Call of Duty version: **1.51**
 ___
 
+### ERRORS
+- SIGSEGV error when trying to call hooks
+
+### TODO
+- Fix errors
+
 #### Credits
 
 Websites:
