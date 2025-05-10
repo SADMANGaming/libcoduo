@@ -1,8 +1,8 @@
-# VCODLIB 1.1
-### Adding more features, gsc functions to Call of Duty 1.1
+# LIBCODUO
+### Adding more features, gsc functions to Call of Duty 1.51
 A fork of libcod1 :D
 
-Supported Call of Duty version: **1.1**
+Supported Call of Duty version: **1.51**
 ___
 
 #### Credits
@@ -14,10 +14,5 @@ Websites:
 - [zk_libcod](https://github.com/ibuddieat/zk_libcod/)
 - [CoDExtended](https://github.com/xtnded/codextended/)
 - [ChatGPT](https://chat.openai.com/)
-- [Killtube Discord](https://discord.gg/7hK9da3SB5)
+- [t1x-server](https://github.com/Wolf-Pack-Clan/t1x-server/)
 
-Peoples:
-
-
-- Raphael
-- iBuddie
