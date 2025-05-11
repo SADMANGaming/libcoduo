@@ -62,13 +62,13 @@ $cc $debug $options $constants -c gsc.cpp -o objects/gsc.opp
 echo "##### COMPILE GSC_PLAYER.CPP #####"
 $cc $debug $options $constants -c gsc_player.cpp -o objects/gsc_player.opp
 
-echo "##### COMPILE VCODLIB.CPP #####"
-$cc $debug $options $constants -c vcodlib.cpp -o objects/vcodlib.opp
+echo "##### COMPILE LIBCODUO.CPP #####"
+$cc $debug $options $constants -c libcoduo.cpp -o objects/libcoduo.opp
 
 echo "##### COMPILE QVSNPRINTF.C #####"
 $cc $debug $options $constants -c vendor/qvsnprintf.c -o objects/qvsnprintf.opp
 
-echo "##### LINK    vcodlibuo.so #####"
+echo "##### LINK    libcoduo.so #####"
 objects="$(ls objects/*.opp)"
-$cc -m32 -shared -L/lib32 -o ../bin/vcodlib.so -ldl $objects -lpthread
+$cc -m32 -shared -L/lib32 -o ../bin/libcoduo.so -ldl $objects -lpthread
 rm objects -r

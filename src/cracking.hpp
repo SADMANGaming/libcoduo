@@ -1,3 +1,6 @@
+#ifndef _CRACKING_HPP_
+#define _CRACKING_HPP_
+
 #include <cstring>      // memcpy, memset
 #include <sys/mman.h>   // mprotect
 
@@ -22,3 +25,5 @@ class cHook
     void hook();
     void unhook();
 };
+
+#endif

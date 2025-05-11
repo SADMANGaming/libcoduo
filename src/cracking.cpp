@@ -8,23 +8,14 @@ void hook_jmp(int from, int to)
     memcpy((void *)(from+1), &relative, 4); // set relative address with endian
 }
 
-void make_writable(void *addr, size_t len)
-{
-    size_t page_size = sysconf(_SC_PAGE_SIZE);
-    uintptr_t addr_start = (uintptr_t)addr & ~(page_size - 1);
-
-    // Ensure the page is writable
-    if (mprotect((void *)addr_start, len + (uintptr_t)addr - addr_start, PROT_READ | PROT_WRITE | PROT_EXEC) == -1) {
-        perror("mprotect failed");
-    }
-}
-
 
 void hook_call(int from, int to)
 {
 	int relative = to - (from+5); // +5 is the position of next opcode
 	memcpy((void *)(from+1), &relative, 4); // set relative address with endian
 }
+
+
 
 void hook_nop(int from, int to)
 {

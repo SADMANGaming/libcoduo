@@ -1,4 +1,3 @@
-// Taken from t1x-server
 #define qboolean int
 #define qtrue   1
 #define qfalse  0
