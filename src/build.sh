@@ -62,6 +62,9 @@ $cc $debug $options $constants -c gsc.cpp -o objects/gsc.opp
 echo "##### COMPILE GSC_PLAYER.CPP #####"
 $cc $debug $options $constants -c gsc_player.cpp -o objects/gsc_player.opp
 
+echo "##### COMPILE GSC_UTILS.CPP #####"
+$cc $debug $options $constants -c gsc_utils.cpp -o objects/gsc_utils.opp
+
 echo "##### COMPILE LIBCODUO.CPP #####"
 $cc $debug $options $constants -c libcoduo.cpp -o objects/libcoduo.opp
 

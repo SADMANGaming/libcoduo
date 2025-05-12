@@ -7,17 +7,15 @@
 #include <unistd.h>   // For sysconf()
 #include <cstdint>    // For uintptr_t
 #include <cstdio>     // For perror()
-
-
+#include "gsc.hpp"
 
 void hook_jmp(int from, int to);
 void hook_call(int from, int to);
 void hook_nop(int from, int to);
-void make_writable(void *addr, size_t len);
 
 class cHook
 {
-    public:
+public:
     int from;
     int to;
     unsigned char oldCode[5];

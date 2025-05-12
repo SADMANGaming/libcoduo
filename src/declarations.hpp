@@ -690,27 +690,36 @@ typedef struct client_s
     unsigned short clscriptid;
     int bIsTestClient;
     int serverId;
-} client_t;
+} client_t;*/ //OLDDDDDDDDDD
 
 
-
-//*/
-
-///*
 
 typedef struct client_s
 {
-    clientConnectState_t state; //0x0000
-    byte gap[0x10a40];
-	char name[MAX_NAME_LENGTH]; //0x10A44
-    //char gap2[566748];
-    char gap2[440];
-    int lastPacketTime; //0x10c1c
-    char gap3[566304];
-	netchan_t netchan; //0x9B040
-	char gap4[60]; //0xAB078*/
-    //...
-} client_t;//*/
+    clientConnectState_t state; // 0x0000
+    byte gap[0x10A40];          // padding up to name
+    char name[MAX_NAME_LENGTH]; // 0x10A44
+    char gap2[440];             // padding up to lastPacketTime
+    int lastPacketTime;         // 0x10C1C
+    int ping;                   // 0x10C20 
+    char gap3[566300];          // adjust this if needed
+    netchan_t netchan;          // 0x9B040 (this offset is outdated based on new layout)
+    char gap4[60];
+} client_t;
+
+//typedef struct client_s
+//{
+//    clientConnectState_t state; //0x0000
+//    byte gap[0x10a40];
+//	char name[MAX_NAME_LENGTH]; //0x10A44
+//    //char gap2[566748];
+//    char gap2[440];
+//    int lastPacketTime; //0x10c1c
+//    char gap3[566304];
+//	netchan_t netchan; //0x9B040
+//	char gap4[60]; //0xAB078*/
+//    //...
+//} client_t;//*/
 
 // guid at 0xab080
 

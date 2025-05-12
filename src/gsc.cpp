@@ -7,6 +7,9 @@ scr_function_t scriptFunctions[] =
 {
 
     {"testFunction", gsc_testfunction, 0},
+    {"getsubstr", gsc_utils_getsubstr, 0},
+    {"strtok", gsc_utils_strtok, 0},
+    {"sendCommandToClient", gsc_utils_sendcommandtoclient, 0},
     {NULL, NULL, 0} // Terminator
 };
 
@@ -34,8 +37,10 @@ scr_method_t scriptMethods[] =
 {
     {"setVelocity", gsc_player_setvelocity, 0},
     {"getVelocity", gsc_player_getvelocity, 0},
-
-
+    {"connectionlesspackettoclient", gsc_player_connectionlesspackettoclient, 0},
+    {"getPing", gsc_player_getping, 0},
+    {"dropclient", gsc_player_dropclient, 0},
+    {"processClientCommand", gsc_player_processclientcommand, 0},
 
     {"testMethod", gsc_testmethod, 0},
     {NULL, NULL, 0} // Terminator

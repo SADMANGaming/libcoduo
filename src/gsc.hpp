@@ -28,12 +28,7 @@
 
 
 #include "gsc_player.hpp"
-
-
-
-
-
-
+#include "gsc_utils.hpp"
 
 
 #define STACK_UNDEFINED 0
