@@ -222,6 +222,7 @@ void custom_Com_Init(char *commandLine)
 
 }
 
+
 int custom_GScr_LoadGameTypeScript()
 {
     unsigned int i;
@@ -259,6 +260,8 @@ int custom_GScr_LoadGameTypeScript()
 
     return ret;
 }
+
+
 
 void hook_ClientCommand(int clientNum)
 {
@@ -301,7 +304,6 @@ void hook_ClientCommand(int clientNum)
     short ret = Scr_ExecEntThread(&g_entities[clientNum], codecallback_playercommand, 1);
     Scr_FreeThread(ret);
 }
-
 
 
 const char* hook_AuthorizeState(int arg)
@@ -518,9 +520,9 @@ void *custom_Sys_LoadDll(const char *name, char *fqpath, int (**entryPoint)(int,
     trap_SendServerCommand = (trap_SendServerCommand_t)dlsym(libHandle, "trap_SendServerCommand");
 
 
-if (sv_spectator_noclip->integer) {
-    *(int*)((int)dlsym(libHandle, "SpectatorThink") + 0x221) = 0;
-}
+    if (sv_spectator_noclip->integer) {
+        *(int*)((int)dlsym(libHandle, "SpectatorThink") + 0x221) = 0;
+    }
 
 
     hook_call((int)dlsym(libHandle, "vmMain") + 0xF0, (int)hook_ClientCommand); // CALL clientcommand address - vmMain address
@@ -566,6 +568,12 @@ public:
         hook_com_init = new cHook(0x0807154e, (int)custom_Com_Init);
         hook_com_init->hook();
         
+
+
+        // infoboom patch
+        //See: https://github.com/PrawyCoD1/coduoextended/blob/9c3ec32e7085266e136d9782cc9ba5c961189919/src/codextended.c#L294
+	    *(byte*)0x807f459 = 1;
+
 
         //hook_sv_addoperatorcommands = new cHook(0x8084A3C, (int)custom_SV_AddOperatorCommands);
         //hook_sv_addoperatorcommands->hook();
