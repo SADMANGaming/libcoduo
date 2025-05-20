@@ -24,6 +24,10 @@ typedef float (*UnGetLeanFraction_t)(const float fFrac);
 typedef float (*AngleNormalize180Accurate_t)(float angle);
 typedef float (*AngleNormalize180_t)(float angle);
 
+
+typedef float (*Jump_Set_f_t)(float height);
+extern Jump_Set_f_t Jump_Set_f;
+
 //// BG
 typedef void (*BG_AddPredictableEventToPlayerstate_t)(int newEvent, int eventParm, playerState_t *ps);
 typedef int (*BG_CheckProne_t)(
@@ -36,6 +40,15 @@ typedef int (*BG_CheckProneValid_t)(int passEntityNum, const float *const vPos, 
     void (*)(trace_t *, const vec3_t, const vec3_t, const vec3_t, const vec3_t, int, int),
     void (*)(trace_t *, const vec3_t, const vec3_t, const vec3_t, const vec3_t, int, int),
     int proneCheckType, float prone_feet_dist);
+    
+typedef int (*BG_GetNumWeapons_t)(void);
+extern BG_GetNumWeapons_t BG_GetNumWeapons;
+
+typedef weaponinfo_t* (*BG_GetInfoForWeapon_t)(unsigned int weaponIndex);
+extern BG_GetInfoForWeapon_t BG_GetInfoForWeapon;
+
+typedef int (*BG_GetWeaponIndexForName_t)(const char *name);
+extern BG_GetWeaponIndexForName_t BG_GetWeaponIndexForName;
 ////
 
 //Cmd
@@ -104,8 +117,6 @@ typedef unsigned int (*Scr_LoadScript_t)(const char *filename);
 typedef int (*Scr_GetFunctionHandle_t)(const char* scriptName, const char* labelName);
 typedef int (*Scr_IsSystemActive_t)();
 typedef void (*Scr_SetString_t)(uint16_t *to, unsigned int from);
-
-
 
 
 // Trap

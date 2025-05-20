@@ -29,6 +29,7 @@
 
 #include "gsc_player.hpp"
 #include "gsc_utils.hpp"
+#include "jump.hpp"
 
 
 #define STACK_UNDEFINED 0

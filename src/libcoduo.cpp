@@ -44,12 +44,15 @@ cvar_t *sv_cracked;
 cvar_t *fs_callbacks_additional;
 cvar_t *fs_callbacks;
 cvar_t *sv_spectator_noclip;
-
+cvar_t *jump_slowdownEnable;
+cvar_t *jump_height;
+//cvar_t* g_legacyStyle;
 
 cHook *hook_com_init;
 cHook *hook_gametype_scripts;
 //cHook *hook_sv_addoperatorcommands;
 cHook *hook_Sys_LoadDll;
+//cHook* hook_cvar_set2;
 
 // Stock callbacks
 int codecallback_startgametype = 0;
@@ -62,7 +65,9 @@ int codecallback_playerkilled = 0;
 int codecallback_client_spam = 0;
 int codecallback_playercommand = 0;
 
-
+// Resume addresses
+uintptr_t resume_addr_PM_WalkMove;
+uintptr_t resume_addr_PM_SlideMove;
 
 callback_t callbacks[] =
 {
@@ -76,56 +81,13 @@ callback_t callbacks[] =
     { &codecallback_playercommand, "CodeCallback_PlayerCommand"}
 };
 
-//customPlayerState_t customPlayerState[MAX_CLIENTS];
-
-/*
-// Game lib objects
-gentity_t* g_entities;
-gclient_t* g_clients;
-//level_locals_t* level;
-
-
-// Game lib functions
-Scr_GetFunctionHandle_t Scr_GetFunctionHandle;
-Scr_GetNumParam_t Scr_GetNumParam;
-Scr_IsSystemActive_t Scr_IsSystemActive;
-Scr_GetInt_t Scr_GetInt;
-Scr_GetString_t Scr_GetString;
-Scr_GetType_t Scr_GetType;
-Scr_GetEntity_t Scr_GetEntity;
-Scr_AddBool_t Scr_AddBool;
-Scr_AddInt_t Scr_AddInt;
-Scr_AddFloat_t Scr_AddFloat;
-Scr_AddString_t Scr_AddString;
-Scr_AddUndefined_t Scr_AddUndefined;
-Scr_AddVector_t Scr_AddVector;
-Scr_MakeArray_t Scr_MakeArray;
-Scr_AddArray_t Scr_AddArray;
-Scr_AddObject_t Scr_AddObject;
-Scr_LoadScript_t Scr_LoadScript;
-Scr_ExecThread_t Scr_ExecThread;
-Scr_ExecEntThread_t Scr_ExecEntThread;
-Scr_ExecEntThreadNum_t Scr_ExecEntThreadNum;
-Scr_FreeThread_t Scr_FreeThread;
-Scr_GetFunction_t Scr_GetFunction;
-Scr_GetMethod_t Scr_GetMethod;
-Scr_Error_t Scr_Error;
-Scr_ObjectError_t Scr_ObjectError;
-Scr_GetConstString_t Scr_GetConstString;
-Scr_ParamError_t Scr_ParamError;
-
-trap_Argv_t trap_Argv;
-trap_SendServerCommand_t trap_SendServerCommand;
-
-ClientCommand_t ClientCommand;
-*/
-
 //// Game lib
 void* libHandle;
 // Objects
 gentity_t *g_entities;
 //level_locals_t *level;
 gclient_t* g_clients;
+pmove_t **pm;
 
 // Functions
 ClientCommand_t ClientCommand;
@@ -179,6 +141,11 @@ AngleNormalize180_t AngleNormalize180;
 BG_CheckProneValid_t BG_CheckProneValid;
 trap_SendServerCommand_t trap_SendServerCommand;
 
+BG_GetNumWeapons_t BG_GetNumWeapons;
+BG_GetInfoForWeapon_t BG_GetInfoForWeapon;
+BG_GetWeaponIndexForName_t BG_GetWeaponIndexForName;
+
+Jump_Set_f_t Jump_Set_f;
 
 void custom_Com_Init(char *commandLine)
 {
@@ -218,11 +185,120 @@ void custom_Com_Init(char *commandLine)
     fs_callbacks = Cvar_Get("fs_callbacks", "", CVAR_ARCHIVE);
     fs_callbacks_additional = Cvar_Get("fs_callbacks_additional", "", CVAR_ARCHIVE);
     sv_spectator_noclip = Cvar_Get("sv_spectator_noclip", "0", CVAR_ARCHIVE | CVAR_SERVERINFO);
+    jump_slowdownEnable =  Cvar_Get("jump_slowdownEnable", "1", CVAR_SYSTEMINFO | CVAR_ARCHIVE);
+    jump_height =  Cvar_Get("jump_height", "39.0", CVAR_ARCHIVE);
+//    g_legacyStyle = Cvar_Get("g_legacyStyle", "1", CVAR_SYSTEMINFO | CVAR_ARCHIVE);
+}
 
+/*
+std::map<std::string, std::map<std::string, WeaponProperties>> weapons_properties;
+
+void toggleLegacyStyle(bool enable)
+{
+    if(enable)
+        Cvar_Set2("jump_slowdownEnable", "0", qfalse);
+    else
+        Cvar_Set2("jump_slowdownEnable", "1", qfalse);
+    if (enable)
+    {
+    int id_kar98k_sniper = BG_GetWeaponIndexForName("kar98k_sniper_mp");
+    weaponinfo_t* weapon_kar98k_sniper = BG_GetInfoForWeapon(id_kar98k_sniper);
+    int id_springfield = BG_GetWeaponIndexForName("springfield_mp");
+    weaponinfo_t* weapon_springfield = BG_GetInfoForWeapon(id_springfield);
+    int id_mosin_nagant_sniper = BG_GetWeaponIndexForName("mosin_nagant_sniper_mp");
+    weaponinfo_t* weapon_mosin_nagant_sniper = BG_GetInfoForWeapon(id_mosin_nagant_sniper);
+
+    if (weapon_kar98k_sniper)
+    {
+        const WeaponProperties* properties_kar98k_sniper = nullptr;
+        if(enable)
+            properties_kar98k_sniper = &weapons_properties[weapon_kar98k_sniper->name]["legacy"];
+        else
+            properties_kar98k_sniper = &weapons_properties[weapon_kar98k_sniper->name]["default"];
+        weapon_kar98k_sniper->adsTransInTime = properties_kar98k_sniper->adsTransInTime;
+        weapon_kar98k_sniper->OOPosAnimLength[0] = 1.0 / (float)weapon_kar98k_sniper->adsTransInTime;
+        weapon_kar98k_sniper->adsZoomInFrac = properties_kar98k_sniper->adsZoomInFrac;
+        weapon_kar98k_sniper->idleCrouchFactor = properties_kar98k_sniper->idleCrouchFactor;
+        weapon_kar98k_sniper->idleProneFactor = properties_kar98k_sniper->idleProneFactor;
+        weapon_kar98k_sniper->rechamberWhileAds = properties_kar98k_sniper->rechamberWhileAds;
+        weapon_kar98k_sniper->adsViewErrorMin = properties_kar98k_sniper->adsViewErrorMin;
+        weapon_kar98k_sniper->adsViewErrorMax = properties_kar98k_sniper->adsViewErrorMax;
+    }
+
+    if (weapon_mosin_nagant_sniper)
+    {
+        const WeaponProperties* properties_mosin_nagant_sniper = nullptr;
+        if(enable)
+            properties_mosin_nagant_sniper = &weapons_properties[weapon_mosin_nagant_sniper->name]["legacy"];
+        else
+            properties_mosin_nagant_sniper = &weapons_properties[weapon_mosin_nagant_sniper->name]["default"];
+        weapon_mosin_nagant_sniper->reloadAddTime = properties_mosin_nagant_sniper->reloadAddTime;
+        weapon_mosin_nagant_sniper->adsTransInTime = properties_mosin_nagant_sniper->adsTransInTime;
+        weapon_mosin_nagant_sniper->OOPosAnimLength[0] = 1.0 / (float)weapon_mosin_nagant_sniper->adsTransInTime;
+        weapon_mosin_nagant_sniper->adsZoomInFrac = properties_mosin_nagant_sniper->adsZoomInFrac;
+        weapon_mosin_nagant_sniper->idleCrouchFactor = properties_mosin_nagant_sniper->idleCrouchFactor;
+        weapon_mosin_nagant_sniper->idleProneFactor = properties_mosin_nagant_sniper->idleProneFactor;
+        weapon_mosin_nagant_sniper->rechamberWhileAds = properties_mosin_nagant_sniper->rechamberWhileAds;
+        weapon_mosin_nagant_sniper->adsViewErrorMin = properties_mosin_nagant_sniper->adsViewErrorMin;
+        weapon_mosin_nagant_sniper->adsViewErrorMax = properties_mosin_nagant_sniper->adsViewErrorMax;
+    }
+
+    if (weapon_springfield)
+    {
+        const WeaponProperties* properties_springfield = nullptr;
+        if(enable)
+            properties_springfield = &weapons_properties[weapon_springfield->name]["legacy"];
+        else
+            properties_springfield = &weapons_properties[weapon_springfield->name]["default"];
+        weapon_springfield->adsTransInTime = properties_springfield->adsTransInTime;
+        weapon_springfield->OOPosAnimLength[0] = 1.0 / (float)weapon_springfield->adsTransInTime;
+        weapon_springfield->adsZoomInFrac = properties_springfield->adsZoomInFrac;
+        weapon_springfield->idleCrouchFactor = properties_springfield->idleCrouchFactor;
+        weapon_springfield->idleProneFactor = properties_springfield->idleProneFactor;
+        weapon_springfield->rechamberWhileAds = properties_springfield->rechamberWhileAds;
+        weapon_springfield->adsViewErrorMin = properties_springfield->adsViewErrorMin;
+        weapon_springfield->adsViewErrorMax = properties_springfield->adsViewErrorMax;
+    }
+    }
 
 }
 
+void custom_Cvar_Set2(const char *var_name, const char *value, qboolean force)
+{
+    bool check_g_legacyStyle = false;
+    bool g_legacyStyle_before;
+    bool g_legacyStyle_after;
+    //printf("##### custom_Cvar_Set2 called: var_name: %s, value: %s\n", var_name, value);
 
+    if(com_sv_running != NULL && com_sv_running->integer)
+    {
+        if(!strcasecmp(var_name, g_legacyStyle->name))
+        {
+            check_g_legacyStyle = true;
+            g_legacyStyle_before = g_legacyStyle->integer ? true : false;
+        }
+    }
+    
+    hook_cvar_set2->unhook();
+    cvar_t* (*Cvar_Set2)(const char *var_name, const char *value, qboolean force);
+    *(int *)&Cvar_Set2 = hook_cvar_set2->from;
+
+    if(check_g_legacyStyle)
+    {
+        cvar_t* var = Cvar_Set2(var_name, value, force);
+        if(var)
+        {
+            g_legacyStyle_after = var->integer ? true : false;
+            if(g_legacyStyle_before != g_legacyStyle_after)
+                toggleLegacyStyle(var->integer);//printf("check_g_legacyStyle\n");//
+        }
+    }
+    else
+        Cvar_Set2(var_name, value, force);
+
+    hook_cvar_set2->hook();
+}
+*/
 int custom_GScr_LoadGameTypeScript()
 {
     unsigned int i;
@@ -464,7 +540,7 @@ void *custom_Sys_LoadDll(const char *name, char *fqpath, int (**entryPoint)(int,
     g_entities = (gentity_t*)dlsym(libHandle, "g_entities");
     g_clients = (gclient_t*)dlsym(libHandle, "g_clients");
 //    level = (level_locals_t*)dlsym(ret, "level");
-
+    pm = (pmove_t**)dlsym(libHandle, "pm");
     ////
 
     //// Functions
@@ -515,14 +591,34 @@ void *custom_Sys_LoadDll(const char *name, char *fqpath, int (**entryPoint)(int,
     UnGetLeanFraction = (UnGetLeanFraction_t)dlsym(libHandle, "UnGetLeanFraction");
     AngleNormalize180Accurate = (AngleNormalize180Accurate_t)dlsym(libHandle, "AngleNormalize180Accurate");
     AngleNormalize180 = (AngleNormalize180_t)dlsym(libHandle, "AngleNormalize180");
+
     BG_CheckProneValid = (BG_CheckProneValid_t)dlsym(libHandle, "BG_CheckProneValid");
+    BG_GetNumWeapons = (BG_GetNumWeapons_t)dlsym(libHandle, "BG_GetNumWeapons");
+    BG_GetInfoForWeapon = (BG_GetInfoForWeapon_t)dlsym(libHandle, "BG_GetInfoForWeapon");
+    BG_GetWeaponIndexForName = (BG_GetWeaponIndexForName_t)dlsym(libHandle, "BG_GetWeaponIndexForName");
 
     trap_SendServerCommand = (trap_SendServerCommand_t)dlsym(libHandle, "trap_SendServerCommand");
+    Jump_Set_f = (Jump_Set_f_t)((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0xF9F);
 
+//024BA5
+// JUMP_SLOWSHITDOWN
+    //hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x11CA, (int)hook_PM_WalkMove_Naked); //UO:sub_24B7C
+    //resume_addr_PM_WalkMove = (uintptr_t)dlsym(libHandle, "PM_GetEffectiveStance") + 0x19AD;
+    //hook_jmp((int)dlsym(libHandle, "PM_SlideMove") + 0xC74, (int)hook_PM_SlideMove_Naked);
+    //resume_addr_PM_SlideMove = (uintptr_t)dlsym(libHandle, "PM_SlideMove") + 0xCB3;
+
+    hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0xAD, (int)custom_Jump_GetLandFactor);
+    hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x4C, (int)custom_PM_GetReducedFriction);
 
     if (sv_spectator_noclip->integer) {
         *(int*)((int)dlsym(libHandle, "SpectatorThink") + 0x221) = 0;
     }
+
+    hook_call((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x11B3, (int)hook_Jump_Check);
+
+
+
+//    hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x11AF,(int)jump_height_hook);
 
 
     hook_call((int)dlsym(libHandle, "vmMain") + 0xF0, (int)hook_ClientCommand); // CALL clientcommand address - vmMain address
@@ -546,7 +642,7 @@ public:
         // Crash handlers for debugging
         signal(SIGSEGV, ServerCrash);
         signal(SIGABRT, ServerCrash);
-        
+
         // Otherwise the printf()'s are printed at crash/end on older os/compiler versions
         setbuf(stdout, NULL);
 
@@ -567,7 +663,8 @@ public:
         hook_Sys_LoadDll->hook();
         hook_com_init = new cHook(0x0807154e, (int)custom_Com_Init);
         hook_com_init->hook();
-        
+        //hook_cvar_set2 = new cHook(0x08073440, (int)custom_Cvar_Set2);
+        //hook_cvar_set2->hook();
 
 
         // infoboom patch

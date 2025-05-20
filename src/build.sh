@@ -65,6 +65,9 @@ $cc $debug $options $constants -c gsc_player.cpp -o objects/gsc_player.opp
 echo "##### COMPILE GSC_UTILS.CPP #####"
 $cc $debug $options $constants -c gsc_utils.cpp -o objects/gsc_utils.opp
 
+echo "##### COMPILE JUMP.CPP #####"
+$cc $debug $options $constants -c jump.cpp -o objects/jump.opp
+
 echo "##### COMPILE LIBCODUO.CPP #####"
 $cc $debug $options $constants -c libcoduo.cpp -o objects/libcoduo.opp
 

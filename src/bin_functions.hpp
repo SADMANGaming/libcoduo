@@ -11,6 +11,9 @@ static const Cvar_Get_t Cvar_Get = (Cvar_Get_t)0x8073114;
 typedef cvar_t * (*Cvar_FindVar_t)(const char *var_name);
 static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x8072FAE;
 
+typedef cvar_t * (*Cvar_Set2_t)(const char *var_name, const char *value, qboolean force);
+static const Cvar_Set2_t Cvar_Set2 = (Cvar_Set2_t)0x08073440;
+
 // Com
 typedef void (*Com_Printf_t)(const char *format, ...);
 static const Com_Printf_t Com_Printf = (Com_Printf_t)0x8070248;

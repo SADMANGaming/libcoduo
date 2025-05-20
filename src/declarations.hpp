@@ -82,6 +82,8 @@
 #define PMF_CROUCH      0x2
 #define PMF_LADDER      0x10
 #define PMF_SLIDING     0x100
+#define PMF_JUMPING     0x3000
+
 
 typedef void (*xcommand_t)(void);
 
@@ -513,6 +515,7 @@ typedef enum
     //...
 } playerState_t; //*/
 
+/* working
 typedef struct playerState_s
 {
     int commandTime; //0x0000
@@ -520,7 +523,7 @@ typedef struct playerState_s
     int bobCycle;
     int pm_flags;// not sure about these two
     int pm_time;
-    //char pad_0008[12]; //0x0008//*/
+    //char pad_0008[12]; //0x0008//
 	vec3_t origin; //0x0014
 	vec3_t velocity; //0x0020
 	char pad_002C[8]; //0x002C
@@ -532,6 +535,32 @@ typedef struct playerState_s
 	char pad_0048[140-4]; //0x0048
 	int clientNum; //0x00D4
 	int weapon; //0x00D8
+} playerState_t;*/
+
+typedef struct playerState_s
+{
+    //int commandTime;
+    //pmtype_t pm_type;
+    //int bobCycle;
+    char gap1[12];
+    int pm_flags;
+    int pm_time;
+    vec3_t origin;
+    vec3_t velocity;
+    //int weaponTime;         // 0x2c
+    //int weaponDelay;        // 0x30
+    //int grenadeTimeLeft;    // 0x34
+    //int iFoliageSoundTime;  // 0x38
+    //int gravity;            // 0x3C // 20
+    //float leanf;            // 0x40
+    //int speed;              // 0x44 // 28
+    //vec3_t delta_angles;    // [0] = 0x48, [1] = 0x4C, [2] = 0x50 // 40
+    //int groundEntityNum;    // 0x54 // 44
+    //vec3_t vLadderVec;      // [0] = 0x58, [1] = 0x5C, [2] = 0x60 // 56
+    char gap2[56];
+    int jumpTime;
+    float jumpOriginZ;
+    //...
 } playerState_t;
 
 struct pmove_t

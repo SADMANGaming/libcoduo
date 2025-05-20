@@ -110,3 +110,4 @@ void gsc_utils_getsubstr()
     tempString[i] = 0;
     stackPushString(tempString);
 }
+
