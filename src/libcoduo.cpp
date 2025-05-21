@@ -53,6 +53,7 @@ cHook *hook_gametype_scripts;
 //cHook *hook_sv_addoperatorcommands;
 cHook *hook_Sys_LoadDll;
 //cHook* hook_cvar_set2;
+cHook *hook_PM_FlyMove;
 
 // Stock callbacks
 int codecallback_startgametype = 0;
@@ -145,6 +146,7 @@ BG_GetNumWeapons_t BG_GetNumWeapons;
 BG_GetInfoForWeapon_t BG_GetInfoForWeapon;
 BG_GetWeaponIndexForName_t BG_GetWeaponIndexForName;
 
+PM_NoclipMove_t PM_NoclipMove;
 Jump_Set_f_t Jump_Set_f;
 
 void custom_Com_Init(char *commandLine)
@@ -404,7 +406,20 @@ const char* hook_AuthorizeState(int arg)
     hook_sv_addoperatorcommands->hook();
 }*/
 
+void custom_PM_FlyMove()
+{
+    if (sv_spectator_noclip->integer)
+    {
+        PM_NoclipMove();
+        return;
+    }
 
+    hook_PM_FlyMove->unhook();
+    void (*PM_FlyMove)();
+    *(int*)&PM_FlyMove = hook_PM_FlyMove->from;
+    PM_FlyMove();
+    hook_PM_FlyMove->hook();
+}
 
 // See https://nachtimwald.com/2017/04/02/constant-time-string-comparison-in-c/
 bool str_iseq(const char *s1, const char *s2)
@@ -496,45 +511,6 @@ void *custom_Sys_LoadDll(const char *name, char *fqpath, int (**entryPoint)(int,
     }
     fclose(fp);
     
-    /*g_entities = (gentity_t*)dlsym(ret, "g_entities");
-    g_clients = (gclient_t*)dlsym(ret, "g_clients");
-//    level = (level_locals_t*)dlsym(ret, "level");
-
-
-    Scr_IsSystemActive = (Scr_IsSystemActive_t)dlsym(ret, "Scr_IsSystemActive");
-    Scr_GetInt = (Scr_GetInt_t)dlsym(ret, "Scr_GetInt");
-    Scr_GetString = (Scr_GetString_t)dlsym(ret, "Scr_GetString");
-    Scr_GetType = (Scr_GetType_t)dlsym(ret, "Scr_GetType");
-    Scr_GetEntity = (Scr_GetEntity_t)dlsym(ret, "Scr_GetEntity");
-    Scr_AddBool = (Scr_AddBool_t)dlsym(ret, "Scr_AddBool");
-    Scr_AddInt = (Scr_AddInt_t)dlsym(ret, "Scr_AddInt");
-    Scr_AddFloat = (Scr_AddFloat_t)dlsym(ret, "Scr_AddFloat");
-    Scr_AddString = (Scr_AddString_t)dlsym(ret, "Scr_AddString");
-    Scr_AddUndefined = (Scr_AddUndefined_t)dlsym(ret, "Scr_AddUndefined");
-    Scr_AddVector = (Scr_AddVector_t)dlsym(ret, "Scr_AddVector");
-    Scr_MakeArray = (Scr_MakeArray_t)dlsym(ret, "Scr_MakeArray");
-    Scr_AddArray = (Scr_AddArray_t)dlsym(ret, "Scr_AddArray");
-    Scr_AddObject = (Scr_AddObject_t)dlsym(ret, "Scr_AddObject");
-    Scr_LoadScript = (Scr_LoadScript_t)dlsym(ret, "Scr_LoadScript");
-
-    Scr_ExecThread = (Scr_ExecThread_t)dlsym(ret, "Scr_ExecThread");
-    Scr_ExecEntThread = (Scr_ExecEntThread_t)dlsym(ret, "Scr_ExecEntThread");
-    Scr_ExecEntThreadNum = (Scr_ExecEntThreadNum_t)dlsym(ret, "Scr_ExecEntThreadNum");
-    Scr_FreeThread = (Scr_FreeThread_t)dlsym(ret, "Scr_FreeThread");
-    Scr_GetFunction = (Scr_GetFunction_t)dlsym(ret, "Scr_GetFunction");
-    Scr_GetMethod = (Scr_GetMethod_t)dlsym(ret, "Scr_GetMethod");
-    Scr_Error = (Scr_Error_t)dlsym(ret, "Scr_Error");
-    Scr_ObjectError = (Scr_ObjectError_t)dlsym(ret, "Scr_ObjectError");
-    Scr_GetConstString = (Scr_GetConstString_t)dlsym(ret, "Scr_GetConstString");
-    Scr_ParamError = (Scr_ParamError_t)dlsym(ret, "Scr_ParamError");
-    Scr_GetFunctionHandle = (Scr_GetFunctionHandle_t)dlsym(ret, "Scr_GetFunctionHandle");
-
-    trap_Argv = (trap_Argv_t)dlsym(ret, "trap_Argv");
-    trap_SendServerCommand = (trap_SendServerCommand_t)dlsym(ret, "trap_SendServerCommand");
-    
-    ClientCommand = (ClientCommand_t)dlsym(ret, "ClientCommand");*/
-
-
     //// Objects
 
     g_entities = (gentity_t*)dlsym(libHandle, "g_entities");
@@ -600,32 +576,20 @@ void *custom_Sys_LoadDll(const char *name, char *fqpath, int (**entryPoint)(int,
     trap_SendServerCommand = (trap_SendServerCommand_t)dlsym(libHandle, "trap_SendServerCommand");
     Jump_Set_f = (Jump_Set_f_t)((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0xF9F);
 
-//024BA5
-// JUMP_SLOWSHITDOWN
-    //hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x11CA, (int)hook_PM_WalkMove_Naked); //UO:sub_24B7C
-    //resume_addr_PM_WalkMove = (uintptr_t)dlsym(libHandle, "PM_GetEffectiveStance") + 0x19AD;
-    //hook_jmp((int)dlsym(libHandle, "PM_SlideMove") + 0xC74, (int)hook_PM_SlideMove_Naked);
-    //resume_addr_PM_SlideMove = (uintptr_t)dlsym(libHandle, "PM_SlideMove") + 0xCB3;
+    PM_NoclipMove = (PM_NoclipMove_t)((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x1FAA);
+
 
     hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0xAD, (int)custom_Jump_GetLandFactor);
     hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x4C, (int)custom_PM_GetReducedFriction);
-
-    if (sv_spectator_noclip->integer) {
-        *(int*)((int)dlsym(libHandle, "SpectatorThink") + 0x221) = 0;
-    }
-
     hook_call((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x11B3, (int)hook_Jump_Check);
-
-
-
-//    hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x11AF,(int)jump_height_hook);
 
 
     hook_call((int)dlsym(libHandle, "vmMain") + 0xF0, (int)hook_ClientCommand); // CALL clientcommand address - vmMain address
 
     hook_gametype_scripts = new cHook((int)dlsym(libHandle, "GScr_LoadGameTypeScript"), (int)custom_GScr_LoadGameTypeScript);
     hook_gametype_scripts->hook();
-    
+    hook_PM_FlyMove = new cHook((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x1457, (int)custom_PM_FlyMove);
+    hook_PM_FlyMove->hook();
     return libHandle;
 }
 

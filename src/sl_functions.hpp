@@ -126,4 +126,9 @@ typedef void (*trap_GetUsercmd_t)(int clientNum, usercmd_s *cmd);
 typedef void (*trap_SendServerCommand_t)(int clientnum, svscmd_type type, const char *text);
 extern trap_SendServerCommand_t trap_SendServerCommand;
 
+
+// PM
+//typedef int (*PM_GetEffectiveStance_t)(playerState_t *ps);
+//typedef void (*PM_ClipVelocity_t)(const float *in, const float *normal, float *out, float overbounce);
+typedef void (*PM_NoclipMove_t)();
 #endif
