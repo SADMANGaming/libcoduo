@@ -9,6 +9,9 @@ extern va_t va;
 typedef void (*ClientCommand_t)(int clientNum);
 extern ClientCommand_t ClientCommand;
 
+typedef qboolean (*StuckInClient_t)(gentity_s *self);
+extern StuckInClient_t StuckInClient;
+
 // idk
 typedef float (*PitchForYawOnNormal_t)(const float fYaw, const vec3_t normal);
 typedef float (*AngleDelta_t)(float angle1, float angle2);

@@ -47,6 +47,7 @@ cvar_t *sv_spectator_noclip;
 cvar_t *jump_slowdownEnable;
 cvar_t *jump_height;
 //cvar_t* g_legacyStyle;
+cvar_t *g_playerEject;
 
 cHook *hook_com_init;
 cHook *hook_gametype_scripts;
@@ -119,7 +120,6 @@ BG_CheckProne_t BG_CheckProne;
 BG_PlayAnim_t BG_PlayAnim;
 PitchForYawOnNormal_t PitchForYawOnNormal;
 AngleDelta_t AngleDelta;
-
 G_ClientStopUsingTurret_t G_ClientStopUsingTurret;
 G_EntUnlink_t G_EntUnlink;
 trap_UnlinkEntity_t trap_UnlinkEntity;
@@ -141,11 +141,10 @@ AngleNormalize180Accurate_t AngleNormalize180Accurate;
 AngleNormalize180_t AngleNormalize180;
 BG_CheckProneValid_t BG_CheckProneValid;
 trap_SendServerCommand_t trap_SendServerCommand;
-
 BG_GetNumWeapons_t BG_GetNumWeapons;
 BG_GetInfoForWeapon_t BG_GetInfoForWeapon;
 BG_GetWeaponIndexForName_t BG_GetWeaponIndexForName;
-
+StuckInClient_t StuckInClient;
 PM_NoclipMove_t PM_NoclipMove;
 Jump_Set_f_t Jump_Set_f;
 
@@ -176,6 +175,7 @@ void custom_Com_Init(char *commandLine)
     sv_maxRate = Cvar_FindVar("sv_maxRate");
     sv_showAverageBPS = Cvar_FindVar("sv_showAverageBPS");
     sv_showCommands = Cvar_FindVar("sv_showCommands");
+    fs_game = Cvar_FindVar("fs_game");
 
     // Register custom cvars
     Cvar_Get("libcoduo", "1", CVAR_SERVERINFO);
@@ -189,6 +189,7 @@ void custom_Com_Init(char *commandLine)
     sv_spectator_noclip = Cvar_Get("sv_spectator_noclip", "0", CVAR_ARCHIVE | CVAR_SERVERINFO);
     jump_slowdownEnable =  Cvar_Get("jump_slowdownEnable", "1", CVAR_SYSTEMINFO | CVAR_ARCHIVE);
     jump_height =  Cvar_Get("jump_height", "39.0", CVAR_ARCHIVE);
+    g_playerEject = Cvar_Get("g_playerEject", "1", CVAR_ARCHIVE);
 //    g_legacyStyle = Cvar_Get("g_legacyStyle", "1", CVAR_SYSTEMINFO | CVAR_ARCHIVE);
 }
 
@@ -392,7 +393,12 @@ const char* hook_AuthorizeState(int arg)
     return s;
 }
 
-
+qboolean hook_StuckInClient(gentity_s *self)
+{
+    if(!g_playerEject->integer)
+        return qfalse;
+    return StuckInClient(self);
+}
 
 
 /*void custom_SV_AddOperatorCommands()
@@ -567,18 +573,18 @@ void *custom_Sys_LoadDll(const char *name, char *fqpath, int (**entryPoint)(int,
     UnGetLeanFraction = (UnGetLeanFraction_t)dlsym(libHandle, "UnGetLeanFraction");
     AngleNormalize180Accurate = (AngleNormalize180Accurate_t)dlsym(libHandle, "AngleNormalize180Accurate");
     AngleNormalize180 = (AngleNormalize180_t)dlsym(libHandle, "AngleNormalize180");
-
     BG_CheckProneValid = (BG_CheckProneValid_t)dlsym(libHandle, "BG_CheckProneValid");
     BG_GetNumWeapons = (BG_GetNumWeapons_t)dlsym(libHandle, "BG_GetNumWeapons");
     BG_GetInfoForWeapon = (BG_GetInfoForWeapon_t)dlsym(libHandle, "BG_GetInfoForWeapon");
     BG_GetWeaponIndexForName = (BG_GetWeaponIndexForName_t)dlsym(libHandle, "BG_GetWeaponIndexForName");
-
     trap_SendServerCommand = (trap_SendServerCommand_t)dlsym(libHandle, "trap_SendServerCommand");
     Jump_Set_f = (Jump_Set_f_t)((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0xF9F);
-
     PM_NoclipMove = (PM_NoclipMove_t)((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x1FAA);
+    StuckInClient = (StuckInClient_t)dlsym(libHandle, "StuckInClient");
 
+    hook_call((int)dlsym(libHandle, "ClientEndFrame") + 0x44D, (int)hook_StuckInClient);
 
+    // jump stuffs
     hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0xAD, (int)custom_Jump_GetLandFactor);
     hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x4C, (int)custom_PM_GetReducedFriction);
     hook_call((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x11B3, (int)hook_Jump_Check);
@@ -636,7 +642,7 @@ public:
 	    *(byte*)0x807f459 = 1;
 
 
-        //hook_sv_addoperatorcommands = new cHook(0x8084A3C, (int)custom_SV_AddOperatorCommands);
+        //hook_sv_addoperatorcommands = new cHook(0x8089580, (int)custom_SV_AddOperatorCommands);
         //hook_sv_addoperatorcommands->hook();
         //
 
