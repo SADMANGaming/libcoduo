@@ -1,8 +1,7 @@
 # LIBCODUO
 ### Adding more features, gsc functions to Call of Duty UO 1.51
-based on libcod1 :D
 
-Supported Call of Duty version: **1.51**
+Supported Call of Duty version: **UO 1.51**
 
 Any problems? Discord: https://discord.gg/8sr5Yg4R
 ___
