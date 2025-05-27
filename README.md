@@ -10,11 +10,11 @@ ___
 ### TODO
 - Add more features
 
-#### Credits
+### Credits
 
 Websites:
 
-
+- [vcodlib-1.5](https://github.com/SADMANGaming/vcodlib-1.5)
 - [libcod1](https://github.com/cod1dev/libcod1/)
 - [zk_libcod](https://github.com/ibuddieat/zk_libcod/)
 - [CoDExtended](https://github.com/xtnded/codextended/)
