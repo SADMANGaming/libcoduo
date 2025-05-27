@@ -515,7 +515,6 @@ typedef enum
     //...
 } playerState_t; //*/
 
-/* working
 typedef struct playerState_s
 {
     int commandTime; //0x0000
@@ -523,7 +522,7 @@ typedef struct playerState_s
     int bobCycle;
     int pm_flags;// not sure about these two
     int pm_time;
-    //char pad_0008[12]; //0x0008//
+    //char pad_0008[12]; //0x0008//*/
 	vec3_t origin; //0x0014
 	vec3_t velocity; //0x0020
 	char pad_002C[8]; //0x002C
@@ -535,32 +534,6 @@ typedef struct playerState_s
 	char pad_0048[140-4]; //0x0048
 	int clientNum; //0x00D4
 	int weapon; //0x00D8
-} playerState_t;*/
-
-typedef struct playerState_s
-{
-    //int commandTime;
-    //pmtype_t pm_type;
-    //int bobCycle;
-    char gap1[12];
-    int pm_flags;
-    int pm_time;
-    vec3_t origin;
-    vec3_t velocity;
-    //int weaponTime;         // 0x2c
-    //int weaponDelay;        // 0x30
-    //int grenadeTimeLeft;    // 0x34
-    //int iFoliageSoundTime;  // 0x38
-    //int gravity;            // 0x3C // 20
-    //float leanf;            // 0x40
-    //int speed;              // 0x44 // 28
-    //vec3_t delta_angles;    // [0] = 0x48, [1] = 0x4C, [2] = 0x50 // 40
-    //int groundEntityNum;    // 0x54 // 44
-    //vec3_t vLadderVec;      // [0] = 0x58, [1] = 0x5C, [2] = 0x60 // 56
-    char gap2[56];
-    int jumpTime;
-    float jumpOriginZ;
-    //...
 } playerState_t;
 
 struct pmove_t
@@ -722,6 +695,22 @@ typedef struct client_s
 } client_t;*/ //OLDDDDDDDDDD
 
 
+/*
+typedef struct client_s
+{
+    clientConnectState_t state;         // 0x0000
+    byte gap[0x10A40];                  // padding up to name
+    char name[MAX_NAME_LENGTH];         // 0x10A44
+    char gap2[440];                     // padding up to lastPacketTime
+    int lastPacketTime;                // 0x10C1C
+    int ping;                           // 0x10C20 
+    char gap3[0x8AEC];                  // 566316 bytes
+    netchan_t netchan;                  // 0x9B040
+    char gap4[0x10098];                 // 65688 bytes
+    bool bIsTestClient;                 // 0xAB178
+    char gap5[60];                      
+} client_t;*/
+
 
 typedef struct client_s
 {
@@ -734,7 +723,7 @@ typedef struct client_s
     char gap3[566300];          // adjust this if needed
     netchan_t netchan;          // 0x9B040 (this offset is outdated based on new layout)
     char gap4[60];
-} client_t;
+} client_t; // The last working one 26/5/25
 
 //typedef struct client_s
 //{
@@ -1111,6 +1100,10 @@ typedef struct customPlayerState_s
     bool hiddenFromScoreboard;
 } customPlayerState_t;
 
+
+
+
+
 #define MAX_ERROR_BUFFER 64
 typedef struct src_error_s
 {
@@ -1124,6 +1117,9 @@ extern stringIndex_t *scr_const;
 
 // #define scrVmPub (*((scrVmPub_t*)(0x082f57e0)))
 
+static const int fs_searchpaths_offset = 0x080EF510;
+
+#define fs_searchpaths (*((searchpath_t**)( fs_searchpaths_offset )))
 #define com_errorEntered (*((int*)(0x084897dc))) // 084897dc
 #define scrVarPub (*((scrVarPub_t*)(0x082f17d8))) // To test
 #define scrVmPub (*((scrVmPub_t*)(0x08433e00))) // To find and test

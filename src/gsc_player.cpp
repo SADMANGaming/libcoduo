@@ -95,7 +95,24 @@ void gsc_player_getping(scr_entref_t ref)
     }
 
     client_t *client = &svs.clients[id];
-    stackPushInt(client->ping);
+    stackPushUndefined();
+    //stackPushInt(client->ping);
+}
+
+void gsc_player_isbot(scr_entref_t ref)
+{
+    int id = ref.entnum;
+
+    if ( id >= MAX_CLIENTS )
+    {
+        stackError("gsc_player_isbot() entity %i is not a player", id);
+        stackPushUndefined();
+        return;
+    }
+
+    client_t *client = &svs.clients[id];
+    stackPushUndefined();
+    //stackPushInt(client->bIsTestClient);
 }
 
 void gsc_player_dropclient(scr_entref_t ref)

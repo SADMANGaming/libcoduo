@@ -41,6 +41,9 @@ static const SV_GameClientNum_t SV_GameClientNum = (SV_GameClientNum_t)0x0808e10
 typedef void (*SV_DropClient_t)(client_t *drop, const char *reason);
 static const SV_DropClient_t SV_DropClient = (SV_DropClient_t)0x0808ba15; // search CS_ZOMBIE duh?
 
+typedef void (*SV_DirectConnect_t)(netadr_t from);
+static const SV_DirectConnect_t SV_DirectConnect = (SV_DirectConnect_t)0x808AC82;
+
 // Cmd
 typedef char* (*Cmd_Argv_t)(int arg);
 static const Cmd_Argv_t Cmd_Argv = (Cmd_Argv_t)0x0805ff28;
@@ -60,5 +63,8 @@ static const NET_OutOfBandPrint_t NET_OutOfBandPrint = (NET_OutOfBandPrint_t)0x0
 
 typedef int (*NET_CompareAdrSigned_t)(netadr_t *a, netadr_t *b);
 static const NET_CompareAdrSigned_t NET_CompareAdrSigned = (NET_CompareAdrSigned_t)0x080849fe;
+
+typedef int (*NET_CompareBaseAdr_t)(netadr_t a,netadr_t b);
+static const NET_CompareBaseAdr_t NET_CompareBaseAdr = (NET_CompareBaseAdr_t)0x08084AF7;
 
 #endif

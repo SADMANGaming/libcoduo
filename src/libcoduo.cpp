@@ -48,6 +48,8 @@ cvar_t *jump_slowdownEnable;
 cvar_t *jump_height;
 //cvar_t* g_legacyStyle;
 cvar_t *g_playerEject;
+cvar_t *sv_fixq3fill;
+cvar_t *fs_svrPaks;
 
 cHook *hook_com_init;
 cHook *hook_gametype_scripts;
@@ -55,6 +57,7 @@ cHook *hook_gametype_scripts;
 cHook *hook_Sys_LoadDll;
 //cHook* hook_cvar_set2;
 cHook *hook_PM_FlyMove;
+cHook *hook_sv_begindownload_f;
 
 // Stock callbacks
 int codecallback_startgametype = 0;
@@ -190,6 +193,9 @@ void custom_Com_Init(char *commandLine)
     jump_slowdownEnable =  Cvar_Get("jump_slowdownEnable", "1", CVAR_SYSTEMINFO | CVAR_ARCHIVE);
     jump_height =  Cvar_Get("jump_height", "39.0", CVAR_ARCHIVE);
     g_playerEject = Cvar_Get("g_playerEject", "1", CVAR_ARCHIVE);
+    fs_svrPaks = Cvar_Get("fs_svrPaks", "", CVAR_ARCHIVE);
+    sv_fixq3fill = Cvar_Get("sv_fixq3fill", "0", CVAR_ARCHIVE);
+
 //    g_legacyStyle = Cvar_Get("g_legacyStyle", "1", CVAR_SYSTEMINFO | CVAR_ARCHIVE);
 }
 
@@ -398,6 +404,134 @@ qboolean hook_StuckInClient(gentity_s *self)
     if(!g_playerEject->integer)
         return qfalse;
     return StuckInClient(self);
+}
+
+
+
+qboolean FS_svrPak(const char *base)
+{
+    if (strstr(base, "_svr_"))
+        return qtrue;
+
+    if (*fs_svrPaks->string)
+    {
+        bool isSvrPak = false;
+        size_t lenString = strlen(fs_svrPaks->string) +1;
+        char* stringCopy = (char*)malloc(lenString);
+        strcpy(stringCopy, fs_svrPaks->string);
+
+        const char* separator = ";";
+        char* strToken = strtok(stringCopy, separator);
+
+        while (strToken != NULL)
+        {
+            if (!strcmp(base, strToken))
+            {
+                isSvrPak = true;
+                break;
+            }
+            strToken = strtok(NULL, separator);
+        }
+
+        free(stringCopy);
+        if (isSvrPak)
+            return qtrue;
+    }
+
+    return qfalse;
+}
+
+bool shouldServeFile(const char *requestedFilePath)
+{
+    static char localFilePath[MAX_OSPATH*2+5];
+    searchpath_t* search;
+
+    localFilePath[0] = 0;
+
+    for(search = fs_searchpaths; search; search = search->next)
+    {
+        if(search->pak)
+        {
+            snprintf(localFilePath, sizeof(localFilePath), "%s/%s.pk3", search->pak->pakGamename, search->pak->pakBasename);
+            if(!strcmp(localFilePath, requestedFilePath))
+                if(!FS_svrPak(search->pak->pakBasename))
+                    return true;
+        }
+    }
+    return false;
+}
+
+void custom_SV_BeginDownload_f(client_t *cl)
+{
+    //// [exploit patch] q3dirtrav
+    // See:
+    //- https://aluigi.altervista.org/video/q3dirtrav.avi
+    //- https://aluigi.altervista.org/poc/q3dirtrav.zip
+    //- https://oldforum.aluigi.org/post3479.html#p3479
+    
+    int args = Cmd_Argc();
+    if (args > 1)
+    {
+        const char* arg1 = Cmd_Argv(1);
+        if (!shouldServeFile(arg1))
+        {
+            char ip[16];
+            snprintf(ip, sizeof(ip), "%d.%d.%d.%d",
+                cl->netchan.remoteAddress.ip[0],
+                cl->netchan.remoteAddress.ip[1],
+                cl->netchan.remoteAddress.ip[2],
+                cl->netchan.remoteAddress.ip[3]);
+            Com_Printf("WARNING: %s (%s) tried to download %s.\n", cl->name, ip, arg1);
+            return;
+        }
+    }
+    ////
+
+    hook_sv_begindownload_f->unhook();
+    void (*SV_BeginDownload_f)(client_t *cl);
+    *(int*)&SV_BeginDownload_f = hook_sv_begindownload_f->from;
+    SV_BeginDownload_f(cl);
+    hook_sv_begindownload_f->hook();
+}
+
+
+
+void custom_SV_DirectConnect(netadr_t from)
+{
+    int maxconnecttime = 10000; 
+
+    if (sv_fixq3fill->integer == 1) {
+        int connectingCount = 0;
+        client_t *duplicateCl = NULL;
+
+        for (int i = 0; i < sv_maxclients->integer; i++) {
+            client_t *cl = &svs.clients[i];
+
+
+            if (cl->state == CS_CONNECTED /*&& NET_CompareBaseAdr(from, cl->netchan.remoteAddress)*/) {
+                int delta = svs.time - cl->lastPacketTime;
+
+                printf("custom_SV_DirectConnect(): Fixq3fill if state 2\n");
+
+                if (delta < maxconnecttime) {
+                    connectingCount++;
+                    duplicateCl = cl;  // save the reference
+                }
+            }
+        }
+
+
+
+        if (connectingCount >= 1 && duplicateCl != NULL) {
+            Com_Printf("Rejected duplicate CONNECTING client from IP: %s\n", NET_AdrToString(from));
+            NET_OutOfBandPrint(NS_SERVER, from, "Only one CONNECTING client allowed per IP (for a short time).\n");
+            SV_DropClient(duplicateCl, NULL);
+            return;
+        }
+    }
+    printf("custom_SV_DirectConnect()\n");
+
+    SV_DirectConnect(from);
 }
 
 
@@ -626,6 +760,9 @@ public:
         hook_call(0x0809e8ed, (int)Scr_GetCustomFunction);
         hook_call(0x0809eb29, (int)Scr_GetCustomMethod);
         hook_call(0x0808a2c9, (int)hook_AuthorizeState);
+
+        hook_call(0x0809466C, (int)custom_SV_DirectConnect);
+
         printf("End  hook\n");
 
 
@@ -635,6 +772,9 @@ public:
         hook_com_init->hook();
         //hook_cvar_set2 = new cHook(0x08073440, (int)custom_Cvar_Set2);
         //hook_cvar_set2->hook();
+
+        hook_sv_begindownload_f = new cHook(0x808C25D, (int)custom_SV_BeginDownload_f);
+        hook_sv_begindownload_f->hook();
 
 
         // infoboom patch

@@ -10,5 +10,6 @@ void gsc_player_getvelocity(scr_entref_t ref);
 void gsc_player_connectionlesspackettoclient(scr_entref_t ref);
 void gsc_player_getping(scr_entref_t ref);
 void gsc_player_dropclient(scr_entref_t ref);
+void gsc_player_isbot(scr_entref_t ref);
 
 #endif

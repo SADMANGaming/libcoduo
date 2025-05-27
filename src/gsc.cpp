@@ -41,6 +41,7 @@ scr_method_t scriptMethods[] =
     {"getPing", gsc_player_getping, 0},
     {"dropclient", gsc_player_dropclient, 0},
     {"processClientCommand", gsc_player_processclientcommand, 0},
+    {"isBot", gsc_player_isbot, 0},
 
     {"testMethod", gsc_testmethod, 0},
     {NULL, NULL, 0} // Terminator
