@@ -189,7 +189,7 @@ void custom_Com_Init(char *commandLine)
     sv_cracked = Cvar_Get("sv_cracked", "0", CVAR_ARCHIVE);
     fs_callbacks = Cvar_Get("fs_callbacks", "", CVAR_ARCHIVE);
     fs_callbacks_additional = Cvar_Get("fs_callbacks_additional", "", CVAR_ARCHIVE);
-    sv_spectator_noclip = Cvar_Get("sv_spectator_noclip", "0", CVAR_ARCHIVE | CVAR_SERVERINFO);
+    sv_spectator_noclip = Cvar_Get("sv_spectator_noclip", "0", CVAR_ARCHIVE);
     jump_slowdownEnable =  Cvar_Get("jump_slowdownEnable", "1", CVAR_SYSTEMINFO | CVAR_ARCHIVE);
     jump_height =  Cvar_Get("jump_height", "39.0", CVAR_ARCHIVE);
     g_playerEject = Cvar_Get("g_playerEject", "1", CVAR_ARCHIVE);
@@ -495,6 +495,26 @@ void custom_SV_BeginDownload_f(client_t *cl)
 }
 
 
+int NET_CompareBaseAdr2(netadr_t from, netadr_t cmp)
+{
+    if (from.type != cmp.type)
+        return qfalse;
+
+    if (from.type == NA_LOOPBACK)
+        return qtrue;
+
+    if (from.type == NA_IP || from.type == NA_IPX) {
+        if (from.ip[0] == cmp.ip[0] &&
+            from.ip[1] == cmp.ip[1] &&
+            from.ip[2] == cmp.ip[2] &&
+            from.ip[3] == cmp.ip[3]) {
+            return qtrue;
+        }
+    }
+
+    return qfalse;
+}
+
 
 void custom_SV_DirectConnect(netadr_t from)
 {
@@ -507,8 +527,8 @@ void custom_SV_DirectConnect(netadr_t from)
         for (int i = 0; i < sv_maxclients->integer; i++) {
             client_t *cl = &svs.clients[i];
 
-
-            if (cl->state == CS_CONNECTED /*&& NET_CompareBaseAdr(from, cl->netchan.remoteAddress)*/) {
+            // fuck NET_CompareBaseAdr, dosent works here :C
+            if (cl->state == CS_CONNECTED && NET_CompareBaseAdr2(from, cl->netchan.remoteAddress)) {
                 int delta = svs.time - cl->lastPacketTime;
 
                 printf("custom_SV_DirectConnect(): Fixq3fill if state 2\n");
