@@ -6,6 +6,13 @@ Supported Call of Duty version: **UO 1.51**
 Any problems? Discord: https://discord.gg/8sr5Yg4R
 ___
 
+### Current features
+- Added new GSC methods and functions.
+- New cvars (like jump_height, jump_slowdownEnable)
+- New q3 exploit fixes (q3fill(experimental) and q3dirtrav)
+- New GSC callbacks
+- Etc..
+
 ### TODO
 - Add more features
 
