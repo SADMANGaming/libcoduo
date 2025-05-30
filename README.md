@@ -1,4 +1,5 @@
 # LIBCODUO
+A server extension for COD UO 1.51
 ### Adding more features, gsc functions to Call of Duty UO 1.51
 
 Supported Call of Duty version: **UO 1.51**
